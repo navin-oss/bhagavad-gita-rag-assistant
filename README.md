@@ -231,10 +231,8 @@ This system implements a modern Retrieval-Augmented Generation (RAG) pipeline:
 <summary>Click to view screenshots</summary>
 
 ### Web Interface
-![Web Interface](./static/ss1.png)
-![Web Interface](./static/ss2.png)
-![Screenshot](./Screenshot 2026-10-14 181714.png)
 
+![Bhagavad Gita RAG Assistant](./Screenshot%202026-10-14%20181714.png)
 </details>
 
 ## 🔍 Example Questions
