@@ -233,6 +233,7 @@ This system implements a modern Retrieval-Augmented Generation (RAG) pipeline:
 ### Web Interface
 ![Web Interface](./static/ss1.png)
 ![Web Interface](./static/ss2.png)
+![Screenshot](./Screenshot 2026-10-14 181714.png)
 
 </details>
 
