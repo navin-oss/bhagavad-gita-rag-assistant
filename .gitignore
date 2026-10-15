@@ -1,0 +1,16 @@
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.env
+.env.*
+!.env.example
+.ipynb_checkpoints/
+.cache/
+models/
+checkpoints/
+outputs/
+*.safetensors
+*.pt
+*.pth
+*.ckpt

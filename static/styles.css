@@ -1,0 +1,1059 @@
+/* ============================================================================
+   BHAGAVAD GITA AI — "Temple at Dawn" Design System
+   Auto light/dark · GPU-friendly · reduced-motion aware · no-build
+   ========================================================================== */
+
+/* ---------------------------------------------------------------- 1. TOKENS */
+:root {
+    /* Lets light-dark() auto-switch, and native scrollbars/inputs adapt */
+    color-scheme: light dark;
+
+    --vh: 1vh;
+
+    /* Brand (theme-independent) */
+    --saffron: #E07A5F;
+    --saffron-deep: #C4553B;
+    --marigold: #F4A261;
+    --gold: #D9A441;
+    --gold-soft: #E9C46A;
+
+    /* Themed tokens: light value first (fallback), then light-dark() */
+    --ink: #221F35;
+    --ink: light-dark(#221F35, #EDE8F6);
+    --ink-soft: #4E4A68;
+    --ink-soft: light-dark(#4E4A68, #B9B3CE);
+    --ink-mute: #86819E;
+    --ink-mute: light-dark(#86819E, #7C7694);
+
+    --surface: rgba(255, 255, 255, .62);
+    --surface: light-dark(rgba(255, 255, 255, .62), rgba(26, 24, 44, .58));
+    --surface-2: rgba(255, 255, 255, .40);
+    --surface-2: light-dark(rgba(255, 255, 255, .40), rgba(255, 255, 255, .05));
+    --solid: #FFFFFF;
+    --solid: light-dark(#FFFFFF, #1B1930);
+
+    --hairline: rgba(34, 31, 53, .09);
+    --hairline: light-dark(rgba(34, 31, 53, .09), rgba(255, 255, 255, .10));
+    --hairline-2: rgba(34, 31, 53, .16);
+    --hairline-2: light-dark(rgba(34, 31, 53, .16), rgba(255, 255, 255, .18));
+
+    --bubble-bot: linear-gradient(180deg, #FFFFFF 0%, #FFFCF5 100%);
+    --bubble-bot: light-dark(linear-gradient(180deg, #FFFFFF 0%, #FFFCF5 100%),
+            linear-gradient(180deg, #221F38 0%, #1C1A2E 100%));
+    --bubble-user: linear-gradient(135deg, #3B3760 0%, #282543 100%);
+    --bubble-user: light-dark(linear-gradient(135deg, #3B3760 0%, #282543 100%),
+            linear-gradient(135deg, #514A82 0%, #37325C 100%));
+    --bubble-user-ink: #FFF8EE;
+
+    --ring: rgba(224, 122, 95, .30);
+    --ring: light-dark(rgba(224, 122, 95, .30), rgba(233, 196, 106, .28));
+    --glow-inset: inset 0 1px 0 rgba(255, 255, 255, .85);
+    --glow-inset: light-dark(inset 0 1px 0 rgba(255, 255, 255, .85), inset 0 1px 0 rgba(255, 255, 255, .07));
+
+    --shadow-1: 0 1px 2px rgba(34, 31, 53, .04), 0 8px 24px -14px rgba(34, 31, 53, .22);
+    --shadow-1: light-dark(0 1px 2px rgba(34, 31, 53, .04), 0 8px 24px -14px rgba(34, 31, 53, .22),
+            0 1px 2px rgba(0, 0, 0, .4), 0 10px 30px -16px rgba(0, 0, 0, .8));
+    --shadow-2: 0 2px 8px rgba(34, 31, 53, .06), 0 28px 64px -28px rgba(34, 31, 53, .34);
+    --shadow-2: light-dark(0 2px 8px rgba(34, 31, 53, .06), 0 28px 64px -28px rgba(34, 31, 53, .34),
+            0 2px 8px rgba(0, 0, 0, .5), 0 32px 70px -30px rgba(0, 0, 0, .9));
+
+    --photo-opacity: .16;
+    --photo-opacity: light-dark(.16, .30);
+    --grain-opacity: .30;
+    --grain-opacity: light-dark(.30, .55);
+
+    /* Chat-box photo: how strongly chat_bg.png shows through
+       (lower alpha = more visible) */
+    --chat-photo-tint: rgba(255, 255, 255, .85);
+    --chat-photo-tint: light-dark(rgba(255, 255, 255, .85), rgba(18, 16, 32, .78));
+
+    /* Soft edge vignette so text stays readable over the photo */
+    --chat-vignette: rgba(34, 31, 53, .05);
+    --chat-vignette: light-dark(rgba(34, 31, 53, .05), rgba(0, 0, 0, .28));
+
+    --radius-xl: 28px;
+    --radius-lg: 22px;
+    --radius-md: 14px;
+    --radius-pill: 999px;
+
+    --ease-spring: cubic-bezier(.16, 1, .3, 1);
+    --ease-soft: cubic-bezier(.4, 0, .2, 1);
+    --blur: 18px;
+}
+
+/* Manual override hooks (see optional JS toggle) */
+:root[data-theme="light"] {
+    color-scheme: light;
+}
+
+:root[data-theme="dark"] {
+    color-scheme: dark;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
+::selection {
+    background: rgba(224, 122, 95, .28);
+    color: var(--ink);
+}
+
+/* ------------------------------------------------------------- 2. BASE LAYOUT */
+html,
+body {
+    height: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+body {
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+    color: var(--ink);
+    display: flex;
+    flex-direction: column;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+
+    /* Base wash (the aurora layer above supplies the colour movement) */
+    background: #FBF5EA;
+    background: light-dark(#FBF5EA, #0D0C18);
+}
+
+/* Layer A — your photograph, fixed without the iOS `background-attachment` bug */
+html::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: -3;
+    background-image: url('/static/bg.png');
+    background-size: cover;
+    background-position: center;
+    opacity: var(--photo-opacity);
+    pointer-events: none;
+}
+
+/* Layer B — animated aurora light field (transform-only = cheap on GPU) */
+body::before {
+    content: "";
+    position: fixed;
+    inset: -30vmax;
+    z-index: -2;
+    pointer-events: none;
+    background:
+        radial-gradient(34vmax 34vmax at 18% 22%, rgba(244, 162, 97, .55), transparent 62%),
+        radial-gradient(30vmax 30vmax at 84% 16%, rgba(224, 122, 95, .42), transparent 64%),
+        radial-gradient(40vmax 40vmax at 74% 86%, rgba(138, 182, 214, .40), transparent 62%),
+        radial-gradient(28vmax 28vmax at 22% 84%, rgba(233, 196, 106, .38), transparent 62%);
+    animation: aurora-drift 38s var(--ease-soft) infinite alternate;
+    will-change: transform;
+}
+
+/* Layer C — film grain. This is what stops gradients looking "plastic". */
+body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    z-index: 5;
+    pointer-events: none;
+    opacity: var(--grain-opacity);
+    mix-blend-mode: soft-light;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@keyframes aurora-drift {
+    0% {
+        transform: translate3d(0, 0, 0) scale(1) rotate(0deg);
+    }
+
+    50% {
+        transform: translate3d(3%, -4%, 0) scale(1.09) rotate(7deg);
+    }
+
+    100% {
+        transform: translate3d(-4%, 3%, 0) scale(1.05) rotate(-5deg);
+    }
+}
+
+/* Fallback if backdrop-filter is unavailable (older Firefox/Android) */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
+    :root {
+        --surface: rgba(255, 255, 255, .92);
+        --surface: light-dark(rgba(255, 255, 255, .92), rgba(24, 22, 40, .94));
+    }
+}
+
+.container {
+    position: relative;
+    max-width: 880px;
+    width: 100%;
+    margin: 0 auto;
+    padding: 20px;
+    height: 100%;
+    height: calc(var(--vh, 1vh) * 100);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Hairline light-catch along the top edge of the app */
+.container::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 12%;
+    right: 12%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, .85), transparent);
+    pointer-events: none;
+    z-index: 3;
+}
+
+/* ----------------------------------------------------------------- 3. HEADER */
+header {
+    position: relative;
+    flex-shrink: 0;
+    margin-bottom: 14px;
+    padding: 1.6rem 1.5rem 2.2rem;
+    text-align: center;
+    color: var(--ink);
+    background: var(--surface);
+    backdrop-filter: blur(14px) saturate(1.4);
+    -webkit-backdrop-filter: blur(14px) saturate(1.4);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glow-inset), var(--shadow-1);
+    overflow: hidden;
+}
+
+/* Ornamental rule + gold diamond — a small "temple" detail */
+header::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 18px;
+    width: 150px;
+    height: 1px;
+    transform: translateX(-50%);
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    opacity: .7;
+}
+
+header::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: 15px;
+    width: 7px;
+    height: 7px;
+    transform: translateX(-50%) rotate(45deg);
+    border-radius: 2px;
+    background: var(--gold-soft);
+    box-shadow: 0 0 14px rgba(217, 164, 65, .9);
+}
+
+header h1 {
+    margin: 0 0 6px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-size: clamp(26px, 5.2vw, 34px);
+    font-weight: 700;
+    letter-spacing: -.4px;
+    text-wrap: balance;
+    color: #2B2745;
+    background: linear-gradient(102deg, #2B2745 18%, #B4643F 92%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+@supports (color: light-dark(#000, #fff)) {
+    header h1 {
+        background: linear-gradient(102deg,
+                light-dark(#2B2745, #F5F0FF) 18%,
+                light-dark(#B4643F, #E9C46A) 92%);
+        -webkit-background-clip: text;
+        background-clip: text;
+    }
+}
+
+header p {
+    margin: 0;
+    font-size: 14.5px;
+    color: var(--ink-mute);
+    letter-spacing: .1px;
+}
+
+/* ------------------------------------------------------------ 4. CHAT SHELL */
+.chat-container {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 18px;
+    background: var(--surface);
+    backdrop-filter: blur(var(--blur)) saturate(1.5);
+    -webkit-backdrop-filter: blur(var(--blur)) saturate(1.5);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-xl);
+    box-shadow: var(--glow-inset), var(--shadow-2);
+}
+
+/* The chat thread. chat_bg.png is painted as a background LAYER on the box
+   itself (not a ::before), because pseudo-elements inside a scroll container
+   scroll away with the messages. `scroll` attachment keeps the photo pinned
+   while messages glide over it. */
+#chat-box {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 14px 10px;
+    margin-bottom: 14px;
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-lg);
+    box-shadow: inset 0 1px 0 var(--glow-inset);
+
+    /* Layer order (top → bottom): readability tint, vignette, your photo */
+    background-image:
+        linear-gradient(var(--chat-photo-tint), var(--chat-photo-tint)),
+        radial-gradient(120% 95% at 50% 0%, transparent 45%, var(--chat-vignette) 100%),
+        url('/static/chat_bg.png');
+    background-size: cover, cover, cover;
+    background-position: center, center, center;
+    background-repeat: no-repeat;
+    background-attachment: scroll;
+
+    scrollbar-width: thin;
+    scrollbar-color: rgba(217, 164, 65, .45) transparent;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+}
+
+/* Empty state: a large, barely-there ॐ watermark */
+#chat-box.empty-chat::before {
+    content: "ॐ";
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    font-size: clamp(130px, 28vw, 240px);
+    line-height: 1;
+    color: var(--ink);
+    opacity: .05;
+    pointer-events: none;
+}
+
+/* Gradient scrollbar */
+#chat-box::-webkit-scrollbar {
+    width: 8px;
+}
+
+#chat-box::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+#chat-box::-webkit-scrollbar-thumb {
+    border-radius: 99px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    background-image: linear-gradient(180deg, var(--saffron), var(--gold-soft));
+    opacity: .45;
+}
+
+#chat-box:hover::-webkit-scrollbar-thumb {
+    opacity: 1;
+}
+
+/* --------------------------------------------------------------- 5. MESSAGES */
+.message-container {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 18px;
+    animation: msg-in .5s var(--ease-spring) both;
+}
+
+.user-container {
+    align-items: flex-end;
+}
+
+@keyframes msg-in {
+    from {
+        opacity: 0;
+        transform: translateY(14px) scale(.985);
+    }
+
+    to {
+        opacity: 1;
+        transform: none;
+    }
+}
+
+.user-message,
+.bot-message {
+    position: relative;
+    max-width: min(84%, 62ch);
+    padding: 13px 18px;
+    font-size: 15px;
+    line-height: 1.62;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    transition: box-shadow .3s var(--ease-soft), transform .3s var(--ease-soft);
+}
+
+.user-message {
+    background: var(--bubble-user);
+    color: var(--bubble-user-ink);
+    border-radius: 22px 22px 6px 22px;
+    font-weight: 500;
+    letter-spacing: .1px;
+    box-shadow: 0 10px 26px -14px rgba(40, 37, 67, .85), inset 0 1px 0 rgba(255, 255, 255, .14);
+}
+
+.user-message::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: linear-gradient(180deg, rgba(255, 255, 255, .16), transparent 48%);
+}
+
+.bot-message {
+    background: var(--bubble-bot);
+    color: var(--ink);
+    border: 1px solid var(--hairline);
+    border-radius: 22px 22px 22px 6px;
+    box-shadow: var(--glow-inset), var(--shadow-1);
+}
+
+/* Warm corner bloom — subtle depth, no extra DOM */
+.bot-message::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    background: radial-gradient(160px 90px at 0% 0%, rgba(233, 196, 106, .16), transparent 72%);
+}
+
+.user-message:hover,
+.bot-message:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--glow-inset), 0 16px 34px -18px rgba(34, 31, 53, .45);
+}
+
+/* First (welcome) message gets a one-time glow + ॐ watermark — replaces the
+   old infinite pulse, which was visually noisy. */
+.message-container:first-child .bot-message {
+    animation: welcome-glow 2.6s var(--ease-soft) 1 both;
+    border-color: rgba(217, 164, 65, .35);
+}
+
+.message-container:first-child .bot-message::after {
+    content: "ॐ";
+    position: absolute;
+    right: 12px;
+    bottom: -10px;
+    font-size: 44px;
+    opacity: .07;
+    pointer-events: none;
+}
+
+@keyframes welcome-glow {
+    0% {
+        box-shadow: var(--glow-inset), 0 0 0 0 rgba(217, 164, 65, 0);
+    }
+
+    45% {
+        box-shadow: var(--glow-inset), 0 0 34px -4px rgba(217, 164, 65, .45);
+    }
+
+    100% {
+        box-shadow: var(--glow-inset), var(--shadow-1);
+    }
+}
+
+/* Rich-text inside bot replies (see optional renderRich JS) */
+.bot-message strong {
+    color: #B4502F;
+    color: light-dark(#B4502F, #E9C46A);
+    font-weight: 650;
+}
+
+.bot-message em {
+    color: var(--ink-soft);
+}
+
+.md-list {
+    margin: 8px 0;
+    padding-left: 20px;
+}
+
+.md-list li {
+    margin: 3px 0;
+}
+
+.md-list li::marker {
+    color: var(--gold);
+}
+
+.verse-block {
+    margin: 12px 0;
+    padding: 14px 18px;
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 15.5px;
+    line-height: 1.75;
+    letter-spacing: .2px;
+    color: var(--ink-soft);
+    border-left: 3px solid var(--gold);
+    border-radius: 4px 14px 14px 4px;
+    background: linear-gradient(90deg, rgba(233, 196, 106, .14), rgba(233, 196, 106, 0) 70%);
+    background: light-dark(linear-gradient(90deg, rgba(233, 196, 106, .16), rgba(233, 196, 106, 0) 70%),
+            linear-gradient(90deg, rgba(233, 196, 106, .10), rgba(233, 196, 106, 0) 70%));
+}
+
+/* Fallback (non-Gita) answers */
+.fallback-message {
+    border-left: 4px solid var(--saffron);
+    background: linear-gradient(180deg, #FFFAF5, #FFF7F0);
+    background: light-dark(linear-gradient(180deg, #FFFAF5, #FFF7F0),
+            linear-gradient(180deg, #2A2036, #241C2E));
+}
+
+.fallback-indicator {
+    align-self: flex-start;
+    margin: 0 0 8px 4px;
+    padding: 4px 10px;
+    font-size: 10.5px;
+    font-weight: 700;
+    letter-spacing: .7px;
+    text-transform: uppercase;
+    color: var(--saffron-deep);
+    color: light-dark(#B4502F, #F0A48C);
+    background: rgba(224, 122, 95, .10);
+    border: 1px solid rgba(224, 122, 95, .22);
+    border-radius: var(--radius-pill);
+}
+
+/* ------------------------------------------------------- 6. ACTION BUTTONS */
+.button-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 9px;
+    margin-left: 4px;
+}
+
+.action-btn,
+.explain-more-btn,
+.references-btn {
+    font: 550 12.5px/1 'Inter', system-ui, sans-serif;
+    letter-spacing: .15px;
+    color: var(--saffron-deep);
+    color: light-dark(#B4502F, #F0A48C);
+    background: rgba(224, 122, 95, .08);
+    border: 1px solid rgba(224, 122, 95, .22);
+    padding: 7px 13px;
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    text-decoration: none;
+    transition: all .25s var(--ease-soft);
+}
+
+.action-btn:hover,
+.explain-more-btn:hover,
+.references-btn:hover {
+    color: #fff;
+    background: linear-gradient(135deg, var(--saffron), var(--marigold));
+    border-color: transparent;
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px -8px rgba(224, 122, 95, .85);
+}
+
+.action-btn:active {
+    transform: translateY(0) scale(.97);
+}
+
+.references-container {
+    max-width: min(88%, 62ch);
+    margin-top: 12px;
+    padding: 16px 18px;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border: 1px solid var(--hairline);
+    border-left: 3px solid var(--gold);
+    border-radius: var(--radius-md);
+    animation: msg-in .35s var(--ease-spring) both;
+}
+
+.references-container h4 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .9px;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+}
+
+.references-container h4:not(:first-child) {
+    margin-top: 16px;
+}
+
+.references-container ul {
+    margin: 0;
+    padding-left: 18px;
+}
+
+.references-container li {
+    margin: 4px 0;
+}
+
+.references-container li::marker {
+    color: var(--gold);
+}
+
+/* ------------------------------------------------------------- 7. COMPOSER */
+.form-control {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    margin-top: auto;
+    padding: 7px;
+    background: var(--solid);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 6px 24px -12px rgba(34, 31, 53, .4);
+    transition: box-shadow .3s var(--ease-soft), border-color .3s var(--ease-soft);
+}
+
+.form-control:focus-within {
+    border-color: rgba(224, 122, 95, .45);
+    box-shadow: 0 0 0 4px var(--ring), 0 12px 30px -14px rgba(34, 31, 53, .5);
+}
+
+#user-input {
+    flex: 1;
+    min-width: 0;
+    padding: 11px 16px;
+    border: none;
+    background: transparent;
+    font: 400 15px/1.4 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+    outline: none;
+}
+
+#user-input::placeholder {
+    color: var(--ink-mute);
+}
+
+#send-btn {
+    position: relative;
+    overflow: hidden;
+    flex-shrink: 0;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    color: #2B1B10;
+    background: linear-gradient(135deg, var(--gold-soft), var(--saffron));
+    box-shadow: 0 8px 20px -8px rgba(224, 122, 95, .9), inset 0 1px 0 rgba(255, 255, 255, .5);
+    transition: transform .25s var(--ease-spring), box-shadow .25s var(--ease-soft), filter .25s;
+}
+
+/* Gold sheen sweep on hover */
+#send-btn::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(115deg, transparent 32%, rgba(255, 255, 255, .65) 48%, transparent 62%);
+    transform: translateX(-130%);
+    transition: transform .65s var(--ease-spring);
+}
+
+#send-btn:hover {
+    transform: translateY(-2px) scale(1.06);
+    filter: saturate(1.15);
+}
+
+#send-btn:hover::after {
+    transform: translateX(130%);
+}
+
+#send-btn:active {
+    transform: scale(.94);
+}
+
+/* --------------------------------------------------------- 8. TYPING DOTS */
+.typing-indicator,
+.loading {
+    display: none;
+    /* JS flips this to flex */
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    flex-shrink: 0;
+    height: 26px;
+    padding: 0 18px 6px;
+    margin-bottom: 8px;
+    color: var(--ink-mute);
+    font-size: 13px;
+}
+
+.typing-indicator span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--marigold), var(--saffron));
+    opacity: .35;
+    animation: dot-bounce 1.35s infinite ease-in-out both;
+}
+
+.typing-indicator span:nth-child(1) {
+    animation-delay: -.32s;
+}
+
+.typing-indicator span:nth-child(2) {
+    animation-delay: -.16s;
+}
+
+@keyframes dot-bounce {
+
+    0%,
+    80%,
+    100% {
+        transform: scale(.55);
+        opacity: .3;
+    }
+
+    40% {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+/* ---------------------------------------------------------------- 9. FOOTER */
+footer {
+    flex-shrink: 0;
+    margin-top: 12px;
+    padding: 10px;
+    text-align: center;
+    font-size: 11.5px;
+    letter-spacing: .25px;
+    color: var(--ink-mute);
+}
+
+footer p {
+    margin: 0;
+}
+
+/* --------------------------------------------------- 10. FLOATING UTILITIES */
+.download-button,
+.theme-toggle {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    z-index: 60;
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    border-radius: 50%;
+    text-decoration: none;
+    color: var(--ink);
+    background: var(--solid);
+    border: 1px solid var(--hairline);
+    box-shadow: 0 6px 18px -8px rgba(34, 31, 53, .5);
+    cursor: pointer;
+    transition: transform .35s var(--ease-spring), box-shadow .3s, color .3s, border-color .3s;
+}
+
+.theme-toggle {
+    right: 72px;
+}
+
+.download-button:hover,
+.theme-toggle:hover {
+    transform: translateY(-3px);
+    color: var(--saffron-deep);
+    border-color: rgba(224, 122, 95, .4);
+    box-shadow: 0 12px 26px -10px rgba(224, 122, 95, .7);
+}
+
+.download-button:active,
+.theme-toggle:active {
+    transform: translateY(0) scale(.94);
+}
+
+.download-icon-svg {
+    width: 19px;
+    height: 19px;
+}
+
+.download-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    background-image: url('/static/chat_bg.png');
+    background-size: cover;
+    background-position: center;
+}
+
+.download-tooltip {
+    position: absolute;
+    top: 54px;
+    right: 0;
+    z-index: 70;
+    padding: 7px 13px;
+    white-space: nowrap;
+    font-size: 12px;
+    font-weight: 550;
+    color: #FFF8EE;
+    background: #2B2745;
+    border-radius: 8px;
+    box-shadow: 0 10px 24px -10px rgba(0, 0, 0, .6);
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: all .25s var(--ease-soft);
+    pointer-events: none;
+}
+
+.download-tooltip::before {
+    content: "";
+    position: absolute;
+    top: -5px;
+    right: 16px;
+    border: 5px solid transparent;
+    border-bottom-color: #2B2745;
+    border-top: 0;
+}
+
+.download-button:hover .download-tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Toast (kept for your original download-success flow) */
+.download-success,
+.toast {
+    position: fixed;
+    top: 22px;
+    left: 50%;
+    z-index: 200;
+    padding: 12px 26px;
+    font-size: 13.5px;
+    font-weight: 650;
+    letter-spacing: .2px;
+    color: #fff;
+    text-align: center;
+    background: linear-gradient(135deg, #3F9E6C, #2E7D55);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 16px 40px -14px rgba(46, 125, 85, .8);
+    transform: translateX(-50%);
+    animation: toast-in .5s var(--ease-spring) both;
+}
+
+.download-success.fade-out {
+    animation: toast-out .45s var(--ease-soft) both;
+}
+
+@keyframes toast-in {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -24px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, 0);
+    }
+}
+
+@keyframes toast-out {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -16px);
+    }
+}
+
+/* Optional suggestion chips */
+.suggestions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 0 0 14px;
+}
+
+.chip {
+    padding: 9px 15px;
+    font: 500 12.5px/1 'Inter', system-ui, sans-serif;
+    color: var(--ink-soft);
+    background: var(--surface-2);
+    border: 1px solid var(--hairline-2);
+    border-radius: var(--radius-pill);
+    cursor: pointer;
+    backdrop-filter: blur(6px);
+    transition: all .25s var(--ease-soft);
+}
+
+.chip:hover {
+    color: #fff;
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--saffron), var(--marigold));
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px -10px rgba(224, 122, 95, .9);
+}
+
+/* Focus visibility for keyboard users */
+:focus-visible {
+    outline: 2px solid var(--saffron);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+/* ----------------------------------------------------------- 11. RESPONSIVE */
+@media (max-width: 768px) {
+    .container {
+        padding: 10px;
+    }
+
+    header {
+        padding: 1.2rem 1rem 1.9rem;
+        border-radius: var(--radius-lg);
+    }
+
+    header::after {
+        width: 110px;
+        bottom: 14px;
+    }
+
+    header::before {
+        bottom: 11px;
+    }
+
+    .chat-container {
+        padding: 12px;
+        border-radius: var(--radius-lg);
+    }
+
+    .user-message,
+    .bot-message {
+        max-width: 92%;
+        font-size: 14.5px;
+        padding: 12px 15px;
+    }
+
+    .download-button,
+    .theme-toggle {
+        width: 38px;
+        height: 38px;
+        top: 14px;
+        right: 14px;
+    }
+
+    .theme-toggle {
+        right: 60px;
+    }
+
+    .download-icon-svg {
+        width: 17px;
+        height: 17px;
+    }
+
+    .download-tooltip {
+        display: none;
+    }
+
+    /* avoids clipping on small screens */
+    #send-btn {
+        width: 42px;
+        height: 42px;
+    }
+
+    footer {
+        font-size: 11px;
+    }
+}
+
+@media (max-width: 400px) {
+    .button-container {
+        gap: 6px;
+    }
+
+    .action-btn,
+    .explain-more-btn,
+    .references-btn {
+        padding: 6px 11px;
+        font-size: 12px;
+    }
+}
+
+/* ---------------------------------------------------- 12. REDUCED MOTION */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+    }
+
+    body::before {
+        animation: none;
+    }
+}
+
+/* ------------------------------------------------------------- 13. PRINT */
+@media print {
+
+    body::before,
+    body::after,
+    html::before,
+    .form-control,
+    .download-button,
+    .theme-toggle,
+    .button-container {
+        display: none !important;
+    }
+
+    .chat-container,
+    header {
+        background: #fff;
+        box-shadow: none;
+        border: 1px solid #ccc;
+    }
+
+    html,
+    body,
+    .container {
+        height: auto;
+        overflow: visible;
+    }
+}
